@@ -22,7 +22,8 @@ done
 
 for individualGroup in "${groupArray[@]}"
 do
-  echo $individualGroup
+  # echo "hi"
+
   # echo $runJoin
   updated="bbnode01"
 
@@ -35,21 +36,27 @@ do
 
   serverGrouparray=(${updatedServerGroupAttributes//,/ })
   # echo ${serverGrouparray[@]}
+  # echo $serverGrouparray
+  # echo ${serverGrouparray[@]}
   # echo $runJoin
   # updatedServerGroupAttributes+=","
   # updatedServerGroupAttributes+=$updated
   if [ $runJoin == true ]
   then
     finalGroupLine=""
-    echo ${serverGrouparray[@]}
+    # echo ${serverGrouparray[@]}
+    # echo ${serverGrouparray[@]}
+    #
+    # echo "${#serverGrouparray[@]}"
+
     for joinElement in ${serverGrouparray[@]}
     do
-      echo $joinElement
+      # echo $joinElement
       finalGroupLine+=$joinElement
       finalGroupLine+=","
-      finalGroupLine+=$updated
-      echo $finalGroupLine
+      # echo $finalGroupLine
     done
+    finalGroupLine+=$updated
 
     # # echo "here"
     # updatedArray=()
@@ -86,9 +93,10 @@ do
   then
     updatedArray=()
     finalGroupLine=""
-    echo "remove"
-    echo ${serverGrouparray[@]}
+    # echo "remove"
+    # echo ${serverGrouparray[@]}
     i=0
+    # echo "${#serverGrouparray[@]}"
     for element in ${serverGrouparray[@]}
     do
       if [ $element != $updated ]
@@ -97,7 +105,7 @@ do
       fi
       ((++i))
     done
-    echo ${updatedArray[@]}
+    # echo ${updatedArray[@]}
 
     j=1
     for groupNameIterator in ${updatedArray[@]}
@@ -107,10 +115,10 @@ do
       then
         finalGroupLine+=","
       fi
-      echo $j
+      # echo $j
       ((++j))
     done
-    echo $finalGroupLine
+    # echo $finalGroupLine
 
     # delete=bbmdev
     # echo ${serverGrouparray[@]/$delete}
@@ -125,7 +133,7 @@ do
 
   # xml ed --inplace -a "/info/servers" --type attr -n servers -v $updated serverInfo.xml
 
-  echo "hi"+$individualGroup
+  # echo "hi"+$individualGroup
 
   /Volumes/SCRATCH/wiretapSDK_2022_MACOSX/tools/MACOSX/x86_64/10_14_6/wiretap_set_metadata -h 192.168.101.10:Backburner -n /servergroups/$individualGroup -s info -f serverInfo.xml
 done
