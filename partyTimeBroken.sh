@@ -163,8 +163,7 @@ do
      echo $deleteTag
      if [ $deleteTag == false ]
      then
-       echo "THE LAST SKYWALKER"
-       # xmlstarlet ed --inplace -u "/info/servers" -v $updatedServerGroupAttributes /tmp/partyTime.xml
+       xmlstarlet ed --inplace -u "/info/servers" -v $updatedServerGroupAttributes /tmp/partyTime.xml
      fi
   elif [ $deleteTag == true ]
   then

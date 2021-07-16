@@ -36,8 +36,6 @@ fi
 echo $groupArray
 for individualGroup in "${groupArray[@]}"
 do
-  moveOn=false
-
   updated=$HOSTNAME
   #should be Hostname
   echo "On: " + $individualGroup
@@ -48,7 +46,7 @@ do
   deleteTag=false
   onlyOne=false
   echo $deleteTag
-  # moveOn=false
+  moveOn=false
 
 
   # /Volumes/SCRATCH/wiretapSDK_2022_MACOSX/tools/MACOSX/x86_64/10_14_6/wiretap_get_metadata -h $BBMANAGER:Backburner -n /servergroups/$individualGroup -s info > serverInfo.xml
@@ -99,54 +97,50 @@ do
       moveOn=true
     fi
 
-    echo "moveON" $moveOn
-    if [ $moveOn == false ]
+    if (( ${#serverGrouparray[@]} == 1 )) && [ ${serverGrouparray[0]} == $updated ]
     then
-      if (( ${#serverGrouparray[@]} == 1 )) && [ ${serverGrouparray[0]} == $updated ]
+      echo ${serverGrouparray[0]}
+      echo "attr" $updated
+      onlyOne=true
+    else
+      onlyOne=false
+    fi
+
+
+
+    echo "YOU ARE HERE"
+
+    updatedArray=()
+    finalGroupLine=""
+    i=0
+    for element in ${serverGrouparray[@]}
+    do
+      echo "element" $element
+      if [ $element != $updated ]
       then
-        echo ${serverGrouparray[0]}
-        echo "attr" $updated
-        onlyOne=true
-      else
-        onlyOne=false
+        updatedArray[$i]=$element
       fi
+      ((++i))
+    done
+    j=1
+    echo ${updatedArray[@]}
 
 
-
-      echo "YOU ARE HERE"
-
-      updatedArray=()
-      finalGroupLine=""
-      i=0
-      for element in ${serverGrouparray[@]}
+      echo "run?" $onlyOne
+      if [ $onlyOne == false ]
+      then
+      for groupNameIterator in ${updatedArray[@]}
       do
-        echo "element" $element
-        if [ $element != $updated ]
+        finalGroupLine+=$groupNameIterator
+        if (( j < ${#updatedArray[@]} ))
         then
-          updatedArray[$i]=$element
+          finalGroupLine+=","
         fi
-        ((++i))
+        ((++j))
       done
-      j=1
-      echo ${updatedArray[@]}
-
-
-        echo "run?" $onlyOne
-        if [ $onlyOne == false ]
-        then
-        for groupNameIterator in ${updatedArray[@]}
-        do
-          finalGroupLine+=$groupNameIterator
-          if (( j < ${#updatedArray[@]} ))
-          then
-            finalGroupLine+=","
-          fi
-          ((++j))
-        done
-        else
-          echo "YOU WERE MEANT TO DESTROY THE SITH NOT JOIN THEM"
-          deleteTag=true
-        fi
+      else
+        echo "YOU WERE MEANT TO DESTROY THE SITH NOT JOIN THEM"
+        deleteTag=true
       fi
 
   fi
@@ -154,17 +148,20 @@ do
   fixedData=${rawData//[$'\t\r\n']}
   echo "Attributes" $serverGroupAttributes
 
-  echo "Bottom" $moveOn
+  if [[ $serverGroupAttributes == "" ]]
+  then
+    echo "nothing to see here!"
+    moveOn=true
+  fi
 
   if [ $moveOn == true ]
   then
-     echo "KENOBI"
+     echo "moveON"
      echo "onlyOne?" $onlyOne
      echo $deleteTag
      if [ $deleteTag == false ]
      then
-       echo "THE LAST SKYWALKER"
-       # xmlstarlet ed --inplace -u "/info/servers" -v $updatedServerGroupAttributes /tmp/partyTime.xml
+       xmlstarlet ed --inplace -u "/info/servers" -v $updatedServerGroupAttributes /tmp/partyTime.xml
      fi
   elif [ $deleteTag == true ]
   then
