@@ -1,4 +1,0 @@
-[Desktop Entry]
-Name=partyTime
-Type=Application
-Exec=/opt/instinctual/partyTime/partyTime.sh --join

@@ -1,0 +1,12 @@
+[Unit]
+Description=Instinctual Partytime
+Wants=network-online.target
+After=network.target network-online.target
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/sleep 30
+ExecStart=/opt/instinctual/partytime/partytime.sh --join
+
+[Install]
+WantedBy=multi-user.target
