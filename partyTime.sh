@@ -36,7 +36,7 @@ do
   moveOn=false
 
   updated=$HOSTNAME
-  /opt/Autodesk/wiretap/tools/current/wiretap_get_metadata -h $bbmmanager:Backburner -n /servergroups/$individualGroup -s info > /tmp/partyTime.xml
+  # /opt/Autodesk/wiretap/tools/current/wiretap_get_metadata -h $bbmmanager:Backburner -n /servergroups/$individualGroup -s info > /tmp/partyTime.xml
 
   deleteTag=false
   onlyOne=false
