@@ -1,22 +1,7 @@
 #!/usr/bin/env bash
-# /Volumes/SCRATCH/wiretapSDK_2022_MACOSX/tools/MACOSX/x86_64/10_14_6/wiretap_get_metadata -h 192.168.101.10:Backburner -n /servergroups/group01 -s info
-
-#sleep 30
 
 cd "$(dirname "$0")"
 source partytime.conf
-# printf "%s" "waiting for ServerXY ..."
-# while ! ping -c 5 -w 30 $bbmmanager #&> /dev/null
-# do
-#     printf "%c" "."
-# done
-
-
-
-# echo $bbmmanager
-# ping -c 2 $bbmmanager
-
-
 
 while ! ping -c 1 -n -w 1 $bbmmanager
 do
@@ -27,15 +12,11 @@ printf "\n%s\n"  "Ping1 complete"
 
 
 while ! /opt/Autodesk/wiretap/tools/current/wiretap_ping -h $bbmmanager:Backburner
-# sleep 1
 do
     sleep 1
     printf "%c" "."
 done
 printf "\n%s\n"  "Wiretap Ping complete"
-
-
-
 
 runJoin=false
 runRemove=false
@@ -43,9 +24,6 @@ machineExists=false
 useCommandLine=false
 deleteTag=false
 error=false
-
-
-sleep 1
 
 # this loop collects information from command line
 while [ $# -gt 0 ] ; do
@@ -61,8 +39,6 @@ while [ $# -gt 0 ] ; do
   shift
 done
 
-
-
 #if no input received in the command line, uses data from setup file
 if [ $useCommandLine == false ]
 then
@@ -73,17 +49,10 @@ fi
 for individualGroup in "${groupArray[@]}"
 do
   moveOn=false
-
   updated=$HOSTNAME
-  # /opt/Autodesk/wiretap/tools/current/wiretap_get_metadata -h $bbmmanager:Backburner -n /servergroups/$individualGroup -s info > /tmp/partyTime.xml
-
   deleteTag=false
   onlyOne=false
-
-
-  echo start
   rawData=""
-  # until /opt/Autodesk/wiretap/tools/current/wiretap_get_metadata -h $bbmmanager:Backburner -n /servergroups/dummy01 -s info
 
   until [[ $rawData != "" ]]
   do
@@ -102,18 +71,12 @@ do
   if [ $error = false ]
   then
     rawData=$(/opt/Autodesk/wiretap/tools/current/wiretap_get_metadata -h $bbmmanager:Backburner -n /servergroups/dummy01 -s info)
-
-    echo rawData2: $rawData
+    $rawData
   fi
 
-
-  # /Volumes/SCRATCH/wiretapSDK_2022_MACOSX/tools/MACOSX/x86_64/10_14_6/wiretap_get_metadata -h $BBMANAGER:Backburner -n /servergroups/$individualGroup -s info > serverInfo.xml
-  # rawData=$(/opt/Autodesk/wiretap/tools/current/wiretap_get_metadata -h $bbmmanager:Backburner -n /servergroups/$individualGroup -s info)
-  serverGroupAttributes=$(perl -ne 'print and last if s/.*<servers>(.*)<\/servers>.*/\1/;' <<< "$rawData")
-
-  updatedServerGroupAttributes=$serverGroupAttributes
-
-  serverGrouparray=(${updatedServerGroupAttributes//,/ })
+serverGroupAttributes=$(perl -ne 'print and last if s/.*<servers>(.*)<\/servers>.*/\1/;' <<< "$rawData")
+updatedServerGroupAttributes=$serverGroupAttributes
+serverGrouparray=(${updatedServerGroupAttributes//,/ })
 
 
   for check in ${serverGrouparray[@]}
@@ -199,7 +162,6 @@ do
   updatedServerGroupAttributes=$finalGroupLine
   fixedData=${rawData//[$'\t\r\n']}
 
-
   if [ $moveOn == true ]
   then
 
@@ -207,42 +169,20 @@ do
      then
        quit=true
        #this loop is only here to catch it before it goes to next part
-       # xmlstarlet ed --inplace -u "/info/servers" -v $updatedServerGroupAttributes /tmp/partyTime.xml
      fi
   elif [ $deleteTag == true ]
   then
-    # xmlstarlet ed --inplace -d "/info/servers" /tmp/partyTime.xml
-    # xmlstarlet ed --inplace -s /info -t elem -n servers -v "" /tmp/partyTime.xml
     newData=$(xmlstarlet fo -t - <<<"$rawData")
-
     temp1Delete=$(xmlstarlet ed --inplace -d "/info/servers" <<< $newData)
     newData=$(xmlstarlet ed --inplace -s /info -t elem -n servers -v "" <<< $temp1Delete)
-    # xmlstarlet ed --inplace -u "/info/" -v "servers" /tmp/partyTime.xml
-
   else
     newData=$(xmlstarlet fo -t - <<<"$rawData")
-    # xmlstarlet ed --inplace -u "/info/servers" -v $updatedServerGroupAttributes /tmp/partyTime.xml
-    # echo $updatedServerGroupAttributes
     finalXML=$(xmlstarlet ed --inplace -u "/info/servers" -v $updatedServerGroupAttributes <<< $newData)
     newData=$(xmlstarlet fo -t - <<<"$finalXML")
-    # echo "new:" $newData
-
   fi
 
-  # /opt/Autodesk/wiretap/tools/current/wiretap_set_metadata -h $bbmmanager:Backburner -n /servergroups/$individualGroup -s info -f /tmp/partyTime.xml
-  # /opt/Autodesk/wiretap/tools/current/wiretap_set_metadata -h $bbmmanager:Backburner -n /servergroups/$individualGroup -s info -f "$(cat newData)"
-  # mkfifo named.pipe
-  # printf '%s\n' "$newData" >named.pipe & writer=$!
-  #
-  # /opt/Autodesk/wiretap/tools/current/wiretap_set_metadata -h $bbmmanager:Backburner -n /servergroups/$individualGroup -s info -f named.pipe
-  # rm named.pipe
-  # wait "$writer"
-  # /opt/Autodesk/wiretap/tools/current/wiretap_set_metadata -h $bbmmanager:Backburner -n /servergroups/$individualGroup -s info -f /dev/stdin <<<"$newData"
   while ! /opt/Autodesk/wiretap/tools/current/wiretap_set_metadata -h $bbmmanager:Backburner -n /servergroups/$individualGroup -s info -f /dev/stdin <<<"$newData"
   do
     /opt/Autodesk/wiretap/tools/current/wiretap_set_metadata -h $bbmmanager:Backburner -n /servergroups/$individualGroup -s info -f /dev/stdin <<<"$newData"
-    echo broken
   done
-  echo fixed
-
 done
