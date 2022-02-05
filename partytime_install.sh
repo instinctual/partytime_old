@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 INSTALLDIR=/opt/instinctual/partytime
+ENGINEERING=/vol/engineering
+HOSTNAME=`hostname -s`
+source /etc/os-release
+source $ENGINEERING/tools/installers/config/machines/$HOSTNAME.conf
+
+
+if [[ $MACHINETYPE == 'workstation' ]]
+  then
 
 cd "$(dirname "$0")"
 
@@ -59,3 +67,5 @@ then
   systemctl enable partytime.service
 fi
 echo "PartyTime has been installed."
+
+fi
