@@ -3,7 +3,7 @@ INSTALLDIR=/opt/instinctual/partytime
 ENGINEERING=/vol/engineering
 HOSTNAME=`hostname -s`
 source /etc/os-release
-source $ENGINEERING/tools/installers/config/machines/$HOSTNAME.conf
+source $ENGINEERING/tools/installers/global/machines/$HOSTNAME.conf
 
 
 if [[ $MACHINETYPE == 'workstation' ]]
@@ -53,8 +53,8 @@ then
 
 
 
-  if [ ! -f "$INSTALLDIR/partytime.conf" ]
-    then
+ if [ ! -f "$INSTALLDIR/partytime.conf" ]
+   then
     install -m 644 partytime.conf.sample $INSTALLDIR/partytime.conf
     echo "**********************************************************************************************"
     echo "You MUST edit partytime.conf with the proper Backburner Manager and Groups info for your site."
