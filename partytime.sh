@@ -78,13 +78,14 @@ wiretapping_bbm
 for BBGROUP in "${BBGROUPS[@]}"; do
   BBGROUPINFO=$(/opt/Autodesk/wiretap/tools/current/wiretap_get_metadata -h $BBMANAGER:Backburner -n /servergroups/$BBGROUP -s info)
   if [[ $ACTION == "add" ]]; then
-    BBGROUPINFO=$(echo $BBGROUPINFO | xmlstarlet ed --update "/info/servers" -x "concat(.,',${CURRENTHOST}')")   ##This adds the current host to the server XML list
+    ##This adds the current host to the server XML list
+    BBGROUPINFO=$(echo $BBGROUPINFO | xmlstarlet ed --update "/info/servers" -x "concat(.,',${CURRENTHOST}')")   
   elif [[ $ACTION == "remove" ]]; then
     # Stop the ADSK Backburner service to kill and currently running jobs.  We don't want a Burn job going on in the background while we use Flame.
     sudo systemctl stop adsk_backburner
     # Isolate the current server list
     BBGROUPSERVERS=$(echo "$BBGROUPINFO" | xmlstarlet sel -t -v "/info/servers")
-    # Remove the current hostname from the list
+    ##Remove the current hostname from the list
     BBGROUPSERVERS=$(echo $BBGROUPSERVERS | sed "s/\b$CURRENTHOST\b//; s/,,/,/; s/^,//; s/,$//")
     # Update modified server list into the XML
     BBGROUPINFO=$(echo "$BBGROUPINFO" | xmlstarlet ed --update "/info/servers" --value "$BBGROUPSERVERS")
