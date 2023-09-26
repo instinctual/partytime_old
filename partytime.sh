@@ -37,7 +37,7 @@ while [[ "$1" != "" ]]; do
     esac
 done
 
-
+##We have to do these pings, as Wiretap needs a kick to actually connect to the Manager
 ping_bbm () {
   while true; do
     # Ping the host with a single packet
@@ -58,7 +58,7 @@ done
 wiretapping_bbm () {
   while true; do
     # Ping the host with a single packet
-    /opt/Autodesk/wiretap/tools/current/wiretap_ping -h $BBMANAGER:Backburner
+    /opt/Autodesk/wiretap/tools/current/wiretap_ping -t 100 -h $BBMANAGER:Backburner
 
     # Check if the ping was successful
     if [ $? -eq 0 ]; then
@@ -73,19 +73,23 @@ done
 }
 
 #ping_bbm
-#wiretapping_bbm
+wiretapping_bbm
 
 for BBGROUP in "${BBGROUPS[@]}"; do
   BBGROUPINFO=$(/opt/Autodesk/wiretap/tools/current/wiretap_get_metadata -h $BBMANAGER:Backburner -n /servergroups/$BBGROUP -s info)
   if [[ $ACTION == "add" ]]; then
     BBGROUPINFO=$(echo $BBGROUPINFO | xmlstarlet ed --update "/info/servers" -x "concat(.,',${CURRENTHOST}')")   ##This adds the current host to the server XML list
   elif [[ $ACTION == "remove" ]]; then
-    # Fetch the current server list
+    # Stop the ADSK Backburner service to kill and currently running jobs.  We don't want a Burn job going on in the background while we use Flame.
+    sudo systemctl stop adsk_backburner
+    # Isolate the current server list
     BBGROUPSERVERS=$(echo "$BBGROUPINFO" | xmlstarlet sel -t -v "/info/servers")
     # Remove the current hostname from the list
     BBGROUPSERVERS=$(echo $BBGROUPSERVERS | sed "s/\b$CURRENTHOST\b//; s/,,/,/; s/^,//; s/,$//")
-    # Update modified server list in  XML
+    # Update modified server list into the XML
     BBGROUPINFO=$(echo "$BBGROUPINFO" | xmlstarlet ed --update "/info/servers" --value "$BBGROUPSERVERS")
+    # Start the ADSK Backburner Service for Flame needs it.
+    sudo systemctl start adsk_backburner
   fi
   /opt/Autodesk/wiretap/tools/current/wiretap_set_metadata -h $BBMANAGER:Backburner -n /servergroups/$BBGROUP -s info -f /dev/stdin <<<"$BBGROUPINFO"
 done
