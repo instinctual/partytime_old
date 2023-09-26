@@ -1,1 +1,1 @@
-%ALL ALL=(ALL) NOPASSWD: /usr/bin/systemctl start adsk_backburner;/usr/bin/systemctl stop adsk_backburner
+%ALL ALL=(ALL) NOPASSWD: /usr/bin/systemctl start adsk_backburner , /usr/bin/systemctl stop adsk_backburner

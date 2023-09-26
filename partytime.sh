@@ -41,35 +41,46 @@ done
 while true; do
     # Ping the host with a single packet
     /opt/Autodesk/wiretap/tools/current/wiretap_ping -t 100 -h $BBMANAGER:Backburner
-
+    
     # Check if the ping was successful
     if [ $? -eq 0 ]; then
-        echo "Wiretap Ping to $BBMANAGER was successful!"
+        #echo "Wiretap Ping to $BBMANAGER was successful!"
         break
     else
-        echo "Wiretap Ping to $BBMANAGER failed. Retrying..."
-        # Optional: wait for a specific duration before trying again
+        #echo "Wiretap Ping to $BBMANAGER failed. Retrying..."
         sleep 1
     fi
 done
 
+# If we are removing the host, stop the ADSK Backburner service to kill any currently running jobs.
+# We don't want a Burn job going on in the background while we use Flame.
+# Add a 2 seconds sleep to make sure the `stop` finishes before we move on.
+if [[ $ACTION == "remove" ]]; then
+    sudo systemctl stop adsk_backburner ; sleep 2
+fi
+
+#Loop thru specified groups and add or remove the host.
 for BBGROUP in "${BBGROUPS[@]}"; do
-  BBGROUPINFO=$(/opt/Autodesk/wiretap/tools/current/wiretap_get_metadata -h $BBMANAGER:Backburner -n /servergroups/$BBGROUP -s info)
-  if [[ $ACTION == "add" ]]; then
-    ##This adds the current host to the server XML list
-    BBGROUPINFO=$(echo $BBGROUPINFO | xmlstarlet ed --update "/info/servers" -x "concat(.,',${CURRENTHOST}')")   
-  elif [[ $ACTION == "remove" ]]; then
-    # Stop the ADSK Backburner service to kill any currently running jobs.  We don't want a Burn job going on in the background while we use Flame.
-    sudo systemctl stop adsk_backburner
-    # Isolate the current server list
-    BBGROUPSERVERS=$(echo "$BBGROUPINFO" | xmlstarlet sel -t -v "/info/servers")
-    # Remove the current hostname from the list
-    BBGROUPSERVERS=$(echo $BBGROUPSERVERS | sed "s/\b$CURRENTHOST\b//; s/,,/,/; s/^,//; s/,$//")
-    # Update modified server list into the XML
-    BBGROUPINFO=$(echo "$BBGROUPINFO" | xmlstarlet ed --update "/info/servers" --value "$BBGROUPSERVERS")
-    # Start the ADSK Backburner Service for Flame needs it.
-    sudo systemctl start adsk_backburner
-  fi
-  #Sumbit the modified XML list to Backburner Manager
-  /opt/Autodesk/wiretap/tools/current/wiretap_set_metadata -h $BBMANAGER:Backburner -n /servergroups/$BBGROUP -s info -f /dev/stdin <<<"$BBGROUPINFO"
+    BBGROUPINFO=$(/opt/Autodesk/wiretap/tools/current/wiretap_get_metadata -h $BBMANAGER:Backburner -n /servergroups/$BBGROUP -s info)
+    if [[ $ACTION == "add" ]]; then
+        ##This adds the current host to the server XML list
+        BBGROUPINFO=$(echo $BBGROUPINFO | xmlstarlet ed --update "/info/servers" -x "concat(.,',${CURRENTHOST}')")
+    elif [[ $ACTION == "remove" ]]; then
+        # Isolate the current server list
+        BBGROUPSERVERS=$(echo "$BBGROUPINFO" | xmlstarlet sel -t -v "/info/servers")
+        # Remove the current hostname from the list
+        BBGROUPSERVERS=$(echo $BBGROUPSERVERS | sed "s/\b$CURRENTHOST\b//; s/,,/,/; s/^,//; s/,$//")
+        # Update modified server list into the XML
+        BBGROUPINFO=$(echo "$BBGROUPINFO" | xmlstarlet ed --update "/info/servers" --value "$BBGROUPSERVERS")
+    fi
+    #Sumbit the modified XML list to Backburner Manager
+    sleep 2
+    /opt/Autodesk/wiretap/tools/current/wiretap_set_metadata -h $BBMANAGER:Backburner -n /servergroups/$BBGROUP -s info -f /dev/stdin <<<"$BBGROUPINFO"
+    sleep 2
 done
+
+# If we are removing the host, start the ADSK Backburner Service for Flame needs it.
+# Add a 2 seconds sleep to make sure the the XML submission finishes before we move on.
+if [[ $ACTION == "remove" ]]; then
+    sleep 2 ; sudo systemctl start adsk_backburner
+fi
