@@ -54,7 +54,6 @@ fi
   mkdir -p $INSTALLDIR
   install -m 555 partytimewrapper.sh $INSTALLDIR
   install -m 555 partytime.sh $INSTALLDIR
-  install -m 0400 partytimerules /etc/sudoers.d/partytimerules
 
 #Check to see if there is an existing configuration file.  Always copy a .sample for future reference.
 if [ ! -f "$INSTALLDIR/partytime.conf" ]
