@@ -72,7 +72,6 @@ bbmupdateserverlistxml(){
 
 #Sumbit the modified XML list to Backburner Manager
 bbmsubmitxml(){
-    sleep 1
     /opt/Autodesk/wiretap/tools/current/wiretap_set_metadata -h $BBMANAGER:Backburner -n /servergroups/$BBGROUP -s info -f /dev/stdin <<<"$BBGROUPINFO"
     sleep 1
 }
