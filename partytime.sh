@@ -73,8 +73,6 @@ for BBGROUP in "${BBGROUPS[@]}"; do
     #Sumbit the modified XML list to Backburner Manager
     sleep 2
     /opt/Autodesk/wiretap/tools/current/wiretap_set_metadata -h $BBMANAGER:Backburner -n /servergroups/$BBGROUP -s info -f /dev/stdin <<<"$BBGROUPINFO"
-    echo "Submitted:"
-    echo "$BBGROUPINFO"
     BBGROUPINFO=$(/opt/Autodesk/wiretap/tools/current/wiretap_get_metadata -h $BBMANAGER:Backburner -n /servergroups/$BBGROUP -s info)
     sleep 2
 done
