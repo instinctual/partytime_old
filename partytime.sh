@@ -37,7 +37,6 @@ while [[ "$1" != "" ]]; do
     esac
 done
 
-
 ping_bbm () {
   while true; do
     # Ping the host with a single packet
@@ -78,13 +77,14 @@ done
 for BBGROUP in "${BBGROUPS[@]}"; do
   BBGROUPINFO=$(/opt/Autodesk/wiretap/tools/current/wiretap_get_metadata -h $BBMANAGER:Backburner -n /servergroups/$BBGROUP -s info)
   if [[ $ACTION == "add" ]]; then
-    BBGROUPINFO=$(echo $BBGROUPINFO | xmlstarlet ed --update "/info/servers" -x "concat(.,',${CURRENTHOST}')")   ##This adds the current host to the server XML list
+    ##This adds the current host to the server XML list
+    BBGROUPINFO=$(echo $BBGROUPINFO | xmlstarlet ed --update "/info/servers" -x "concat(.,',${CURRENTHOST}')")   
   elif [[ $ACTION == "remove" ]]; then
-    # Fetch the current server list
+    ##Fetch the current server list
     BBGROUPSERVERS=$(echo "$BBGROUPINFO" | xmlstarlet sel -t -v "/info/servers")
-    # Remove the current hostname from the list
+    ##Remove the current hostname from the list
     BBGROUPSERVERS=$(echo $BBGROUPSERVERS | sed "s/\b$CURRENTHOST\b//; s/,,/,/; s/^,//; s/,$//")
-    # Update modified server list in  XML
+    ##Update modified server list in  XML
     BBGROUPINFO=$(echo "$BBGROUPINFO" | xmlstarlet ed --update "/info/servers" --value "$BBGROUPSERVERS")
   fi
   /opt/Autodesk/wiretap/tools/current/wiretap_set_metadata -h $BBMANAGER:Backburner -n /servergroups/$BBGROUP -s info -f /dev/stdin <<<"$BBGROUPINFO"
