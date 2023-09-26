@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-function partyTimeJoin {
-  nohup /opt/instinctual/partytime/partytime.sh --join >/dev/null 2>&1 &
+
+PARTYTIMEBIN=/opt/instinctual/partytime/partytime.sh
+
+partytime_add() {
+  nohup $PARTYTIMEBIN --add >/dev/null 2>&1 &
 }
 
-/opt/instinctual/partytime/partytime.sh --remove &
+$PARTYTIMEBIN --remove &
 
-trap partyTimeJoin INT TERM EXIT
+trap partytime_add INT TERM EXIT
 sleep infinity

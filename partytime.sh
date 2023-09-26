@@ -2,187 +2,90 @@
 
 cd "$(dirname "$0")"
 source partytime.conf
+CURRENTHOST=$(hostname -s)
 
-while ! ping -c 1 -n -w 1 $bbmmanager
-do
-    sleep 1
-    printf "%c" "."
-done
-printf "\n%s\n"  "Ping1 complete"
+show_usage() {
+    echo "Usage: $0 [--add | --remove]"
+    echo "  --add       Add host to Backburner Group"
+    echo "  --remove    Remove host from Backburner Group"
+}
 
-
-while ! /opt/Autodesk/wiretap/tools/current/wiretap_ping -h $bbmmanager:Backburner
-do
-    sleep 1
-    printf "%c" "."
-done
-printf "\n%s\n"  "Wiretap Ping complete"
-
-runJoin=false
-runRemove=false
-machineExists=false
-useCommandLine=false
-deleteTag=false
-error=false
-
-# this loop collects information from command line
-while [ $# -gt 0 ] ; do
-  case $1 in
-    -g | --groups)
-    S="$2"
-    groupArray=(${2//,/ });useCommandLine=true;;
-    -j | --join) J="$1";runJoin=true;;
-    -r | --remove) R="$2";runRemove=true;;
-    # -b | --barg) B="$2" ;;
-
-  esac
-  shift
-done
-
-#if no input received in the command line, uses data from setup file
-if [ $useCommandLine == false ]
-then
-  groupArray=(${bbgroups//,/ })
-
+# No options means we should display usage
+if [[ $# -eq 0 ]]; then
+    show_usage
+    exit 1
 fi
-# loops through groups in list
-for individualGroup in "${groupArray[@]}"
-do
-  moveOn=false
-  updated=$HOSTNAME
-  deleteTag=false
-  onlyOne=false
-  rawData=""
 
-  until [[ $rawData != "" ]]
-  do
-    sleep 1
-    printf "wait"
-    rawData=$(/opt/Autodesk/wiretap/tools/current/wiretap_get_metadata -h $bbmmanager:Backburner -n /servergroups/$individualGroup -s info)
-    printf "1"
-    # echo $rawData
-    printf "2"
-    error=true
-  done
-  if [[ $rawData == "" ]]
-  then
-    echo "blank"
-  fi
-  if [ $error = false ]
-  then
-    rawData=$(/opt/Autodesk/wiretap/tools/current/wiretap_get_metadata -h $bbmmanager:Backburner -n /servergroups/dummy01 -s info)
-    $rawData
-  fi
+# Save the option in a variable
+ACTION=""
 
-serverGroupAttributes=$(perl -ne 'print and last if s/.*<servers>(.*)<\/servers>.*/\1/;' <<< "$rawData")
-updatedServerGroupAttributes=$serverGroupAttributes
-serverGrouparray=(${updatedServerGroupAttributes//,/ })
+while [[ "$1" != "" ]]; do
+    case $1 in
+        --add)
+            shift
+            ACTION="add"
+            ;;
+        --remove)
+            shift
+            ACTION="remove"
+            ;;
+        *)
+            echo "Invalid option: $1" >&2
+            show_usage
+            exit 1
+            ;;
+    esac
+done
 
 
-  for check in ${serverGrouparray[@]}
-  do
-    if [ $check == $updated ]
-    then
-      machineExists=true
-    fi
-  done
+ping_bbm () {
+  while true; do
+    # Ping the host with a single packet
+    ping -c 1 $BBMANAGER
 
-  if [ $runJoin == true ]
-  then
-    finalGroupLine=""
-    q=0
-    for joinElement in ${serverGrouparray[@]}
-    do
-      finalGroupLine+=$joinElement
-      if (( q < ${#serverGrouparray[@]}-1 ))
-      then
-        finalGroupLine+=","
-      fi
-      ((++q))
-    done
-    if [ $machineExists == false ]
-    then
-      if (( ${#serverGrouparray[@]} != 0))
-      then
-        finalGroupLine+=","
-      fi
-      finalGroupLine+=$updated
+    # Check if the ping was successful
+    if [ $? -eq 0 ]; then
+        echo "Ping to $BBMANAGER was successful!"
+        break
     else
-      #resets for next round
-      machineExists=false
+        echo "Ping to $BBMANAGER failed. Retrying..."
+        # Optional: wait for a specific duration before trying again
+        sleep 1
     fi
+done
+}
 
-  fi
+wiretapping_bbm () {
+  while true; do
+    # Ping the host with a single packet
+    /opt/Autodesk/wiretap/tools/current/wiretap_ping -h $BBMANAGER:Backburner
 
-  if [ $runRemove == true ]
-  then
-    if [[ ${serverGrouparray[@]} == "" ]]
-    then
-      moveOn=true
+    # Check if the ping was successful
+    if [ $? -eq 0 ]; then
+        echo "Wiretap Ping to $BBMANAGER was successful!"
+        break
+    else
+        echo "Wiretap Ping to $BBMANAGER failed. Retrying..."
+        # Optional: wait for a specific duration before trying again
+        sleep 1
     fi
+done
+}
 
-    if [ $moveOn == false ]
-    then
-      if (( ${#serverGrouparray[@]} == 1 )) && [ ${serverGrouparray[0]} == $updated ]
-      then
-        onlyOne=true
-      else
-        onlyOne=false
-      fi
+#ping_bbm
+#wiretapping_bbm
 
-      updatedArray=()
-      finalGroupLine=""
-      i=0
-      for element in ${serverGrouparray[@]}
-      do
-        if [ $element != $updated ]
-        then
-          updatedArray[$i]=$element
-        fi
-        ((++i))
-      done
-      j=1
-        if [ $onlyOne == false ]
-        then
-        for groupNameIterator in ${updatedArray[@]}
-        do
-          finalGroupLine+=$groupNameIterator
-          if (( j < ${#updatedArray[@]} ))
-          then
-            finalGroupLine+=","
-          fi
-          ((++j))
-        done
-        else
-          deleteTag=true
-        fi
-      fi
-
+for BBGROUP in "${BBGROUPS[@]}"; do
+  BBGROUPINFO=$(/opt/Autodesk/wiretap/tools/current/wiretap_get_metadata -h $BBMANAGER:Backburner -n /servergroups/$BBGROUP -s info)
+  if [[ $ACTION == "add" ]]; then
+    BBGROUPINFO=$(echo $BBGROUPINFO | xmlstarlet ed --update "/info/servers" -x "concat(.,',${CURRENTHOST}')")   ##This adds the current host to the server XML list
+  elif [[ $ACTION == "remove" ]]; then
+    # Fetch the current server list
+    BBGROUPSERVERS=$(echo "$BBGROUPINFO" | xmlstarlet sel -t -v "/info/servers")
+    # Remove the current hostname from the list
+    BBGROUPSERVERS=$(echo $BBGROUPSERVERS | sed "s/\b$CURRENTHOST\b//; s/,,/,/; s/^,//; s/,$//")
+    # Update modified server list in  XML
+    BBGROUPINFO=$(echo "$BBGROUPINFO" | xmlstarlet ed --update "/info/servers" --value "$BBGROUPSERVERS")
   fi
-  updatedServerGroupAttributes=$finalGroupLine
-  fixedData=${rawData//[$'\t\r\n']}
-
-  if [ $moveOn == true ]
-  then
-
-     if [ $deleteTag == false ]
-     then
-       quit=true
-       #this loop is only here to catch it before it goes to next part
-     fi
-  elif [ $deleteTag == true ]
-  then
-    newData=$(xmlstarlet fo -t - <<<"$rawData")
-    temp1Delete=$(xmlstarlet ed --inplace -d "/info/servers" <<< $newData)
-    newData=$(xmlstarlet ed --inplace -s /info -t elem -n servers -v "" <<< $temp1Delete)
-  else
-    newData=$(xmlstarlet fo -t - <<<"$rawData")
-    finalXML=$(xmlstarlet ed --inplace -u "/info/servers" -v $updatedServerGroupAttributes <<< $newData)
-    newData=$(xmlstarlet fo -t - <<<"$finalXML")
-  fi
-
-  while ! /opt/Autodesk/wiretap/tools/current/wiretap_set_metadata -h $bbmmanager:Backburner -n /servergroups/$individualGroup -s info -f /dev/stdin <<<"$newData"
-  do
-    /opt/Autodesk/wiretap/tools/current/wiretap_set_metadata -h $bbmmanager:Backburner -n /servergroups/$individualGroup -s info -f /dev/stdin <<<"$newData"
-  done
+  /opt/Autodesk/wiretap/tools/current/wiretap_set_metadata -h $BBMANAGER:Backburner -n /servergroups/$BBGROUP -s info -f /dev/stdin <<<"$BBGROUPINFO"
 done
