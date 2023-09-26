@@ -52,13 +52,6 @@ while true; do
     fi
 done
 
-# If we are removing the host, stop the ADSK Backburner service to kill any currently running jobs.
-# We don't want a Burn job going on in the background while we use Flame.
-# Add a 2 seconds sleep to make sure the `stop` finishes before we move on.
-# if [[ $ACTION == "remove" ]]; then
-#     sudo systemctl stop adsk_backburner ; sleep 2
-# fi
-
 #Loop thru specified groups and add or remove the host.
 for BBGROUP in "${BBGROUPS[@]}"; do
     BBGROUPINFO=$(/opt/Autodesk/wiretap/tools/current/wiretap_get_metadata -h $BBMANAGER:Backburner -n /servergroups/$BBGROUP -s info)
@@ -85,9 +78,3 @@ for BBGROUP in "${BBGROUPS[@]}"; do
     BBGROUPINFO=$(/opt/Autodesk/wiretap/tools/current/wiretap_get_metadata -h $BBMANAGER:Backburner -n /servergroups/$BBGROUP -s info)
     sleep 2
 done
-
-# If we are removing the host, start the ADSK Backburner Service for Flame needs it.
-# Add a 2 seconds sleep to make sure the the XML submission finishes before we move on.
-# if [[ $ACTION == "remove" ]]; then
-#     sleep 2 ; sudo systemctl start adsk_backburner
-# fi
