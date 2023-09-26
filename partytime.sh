@@ -59,6 +59,7 @@ bbmgetallxml(){
 bbmgetserverlistxml(){
     BBGROUPSERVERS=$(echo "$BBGROUPINFO" | xmlstarlet sel -t -v "/info/servers")
 }
+
 # Remove the current hostname from the server list
 bbmremovehostxml(){
     BBGROUPSERVERS=$(echo $BBGROUPSERVERS | sed "s/\b$CURRENTHOST\b//; s/,,/,/; s/^,//; s/,$//")
@@ -73,7 +74,6 @@ bbmupdateserverlistxml(){
 bbmsubmitxml(){
     sleep 1
     /opt/Autodesk/wiretap/tools/current/wiretap_set_metadata -h $BBMANAGER:Backburner -n /servergroups/$BBGROUP -s info -f /dev/stdin <<<"$BBGROUPINFO"
-    BBGROUPINFO=$(/opt/Autodesk/wiretap/tools/current/wiretap_get_metadata -h $BBMANAGER:Backburner -n /servergroups/$BBGROUP -s info)
     sleep 1
 }
 
