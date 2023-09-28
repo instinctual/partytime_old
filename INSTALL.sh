@@ -13,18 +13,16 @@ if [[ $UID -ne 0 ]]; then
     exit 1
 fi
 
-check_internet() {
-  echo "Testing for Internet connectivity to google.com.  Please wait."
-  ping -W2 -c1 google.com > /dev/null
-  if [ $? -eq 0 ]
-    then
-      echo "Internet is good.  Moving On."
-      echo
-    else
-      echo "Installer needs Internet connectivity. Open the firewall and try again."
-      exit 0
-  fi
-}
+echo "Testing for Internet connectivity to google.com.  Please wait."
+ping -W2 -c1 google.com > /dev/null
+if [ $? -eq 0 ]
+  then
+    echo "Internet is good.  Moving On."
+    echo
+  else
+    echo "Installer needs Internet connectivity. Open the firewall and try again."
+    exit 0
+fi
 
 # Check if xmlstarlet is installed
 if ! rpm -q xmlstarlet &>/dev/null; then
