@@ -3,5 +3,4 @@ BBMANAGER=manager01
 
 ## Change to your Backburner groups
 ## Groups need to be seperated by spaces
-BBGROUPS=(BURN NUKE DELIVERABLES 3D)   
-
+BBGROUPS=(BURN NUKE DELIVERABLES 3D)

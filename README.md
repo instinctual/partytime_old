@@ -9,12 +9,6 @@ partytime.conf is used to define the BackBurner Manager and groups to party with
 
 You can test functionality via the command line.
 
-``` partytime.sh --join``` will add the machine to the group(s) defined in partytime.conf
+``` partytime.sh --add``` will add the machine to the group(s) defined in partytime.conf
 
 ``` partytime.sh --remove``` will remove the machine from the group(s) defined in partytime.conf
-
-
-You can manually specify groups by adding the --groups flag and a comma seperated list of BackBurner groups.
-```
-sh partyTime.sh --groups group01,group02 --join
-```

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ## This script launches at login, removes the host from specificed BB Groups.  
-## It then waits running in the background for logout, and then adds the host to specified BB Groups.
+## It then waits running in the background, and upon GUI logout adds the host to specified BB Groups.
 
 partytime_add() {
   nohup sudo -u partytime /opt/instinctual/partytime/partytime.sh --add >/dev/null 2>&1 &
