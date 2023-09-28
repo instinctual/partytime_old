@@ -6,6 +6,8 @@ After=network-online.target
 [Service]
 Type=oneshot
 ExecStart=/opt/instinctual/partytime/partytime.sh --add
+ExecStop=/opt/instinctual/partytime/partytime.sh --remove
+RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target

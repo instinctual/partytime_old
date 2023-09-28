@@ -76,6 +76,15 @@ bbmsubmitxml(){
     sleep 1
 }
 
+# Check if PCOIP is active.  If so, then override ACTION and set to 'remove' since Burn expects to have a local window manager running and errors out if not.  
+# So we do NOT add a host that is running PCOIP.
+PCOIPSERVICE="pcoip"
+PCOIPSTATUS=$(systemctl is-active "$PCOIPSERVICE")
+
+if [ "$PCOIPSTATUS" == "active" ]; then
+    ACTION=remove
+fi
+
 #Loop thru specified groups and add or remove the host.
 for BBGROUP in "${BBGROUPS[@]}"; do
     bbmgetallxml

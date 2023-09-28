@@ -54,21 +54,22 @@ fi
   mkdir -p $INSTALLDIR
   install -m 555 partytimewrapper.sh $INSTALLDIR
   install -m 555 partytime.sh $INSTALLDIR
+  install -m 440 partytime.rules /etc/sudoers.d/partytime
 
 #Check to see if there is an existing configuration file.  Always copy a .sample for future reference.
 if [ ! -f "$INSTALLDIR/partytime.conf" ]
   then
-    install -m 644 partytime.conf.sample $INSTALLDIR/partytime.conf
+    install -m 664 partytime.conf.sample $INSTALLDIR/partytime.conf
     echo "**********************************************************************************************"
     echo "You MUST edit partytime.conf with the proper Backburner Manager and Groups info for your site."
     echo "**********************************************************************************************"
 else
-  install -m 644 partytime.conf.sample $INSTALLDIR/partytime.conf.sample
+  install -m 664 partytime.conf.sample $INSTALLDIR/partytime.conf.sample
   echo "Existing config file found, not replacing. Adding .sample file."
 fi
 
-install -m 555 partytime.desktop /etc/xdg/autostart/partytime.desktop
+install -m 444 partytime.desktop /etc/xdg/autostart/partytime.desktop
 install -m 444 partytime.service /etc/systemd/system/partytime.service
 systemctl daemon-reload
-systemctl enable partytime.service
+systemctl enable --now partytime.service
 echo "PartyTime has been installed."
