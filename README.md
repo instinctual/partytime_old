@@ -1,3 +1,6 @@
+# This is old, crappy code.
+# We don't use this anymore, and neither should you, but it is here should you want.
+
 # partytime
 Join in the render party.
 
